@@ -754,6 +754,7 @@ export class AIDebugger {
   private customModal: AIDebuggerModal;
   private errorLogs: string[] = [];
   private readonly MAX_ERROR_LOGS = 3;
+  private activeDataTransfer: DataTransfer | null = null;
 
   constructor() {
     this.overlay = document.createElement('div');
@@ -1082,6 +1083,12 @@ export class AIDebugger {
       throw new Error(`Elemen tidak ditemukan untuk selector: ${selector}`);
     }
 
+    // Console Logging for better developer visibility
+    console.log(
+      `%c[AI Debugger] Executing: ${action.action} on ${selector}${action.text ? ` with text "${action.text}"` : ''}`, 
+      'color: #3b82f6; font-weight: bold; background: #eff6ff; padding: 2px 4px; border-radius: 4px;'
+    );
+
     this.highlightSimulatedElement(element, '#10b981');
     await new Promise(resolve => setTimeout(resolve, 400));
 
@@ -1102,6 +1109,38 @@ export class AIDebugger {
       element.dispatchEvent(new Event('change', { bubbles: true }));
       element.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
       element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+    } else if (action.action === 'dragstart') {
+      this.activeDataTransfer = new DataTransfer();
+      const dragStartEvent = new DragEvent('dragstart', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: this.activeDataTransfer
+      });
+      element.dispatchEvent(dragStartEvent);
+    } else if (action.action === 'drop') {
+      const transfer = this.activeDataTransfer || new DataTransfer();
+      
+      const dragOverEvent = new DragEvent('dragover', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer
+      });
+      element.dispatchEvent(dragOverEvent);
+
+      const dropEvent = new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer
+      });
+      element.dispatchEvent(dropEvent);
+      
+      const dragEndEvent = new DragEvent('dragend', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer
+      });
+      element.dispatchEvent(dragEndEvent);
+      this.activeDataTransfer = null;
     } else if (action.action === 'wait') {
       await new Promise(resolve => setTimeout(resolve, action.duration || 500));
     }
