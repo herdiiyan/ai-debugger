@@ -1,5 +1,5 @@
 ---
-name: prod-debug-local-tracing
+name: local-tracing
 description: Used when the user reports an issue or error in the production environment and requires structured guidance to replicate, trace, and fix the issue locally in the development environment.
 ---
 
